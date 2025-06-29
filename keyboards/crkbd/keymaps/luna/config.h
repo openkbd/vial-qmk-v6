@@ -23,8 +23,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //#define USE_MATRIX_I2C
 #define SPLIT_USB_DETECT
 //#define QUICK_TAP_TERM 0
-//#define TAPPING_TERM 100
+#define TAPPING_TERM 250
+#pragma once
 
+#define OLED_TIMEOUT 120000
+#define OLED_BRIGHTNESS 120
+#define SPLIT_WPM_ENABLE
 #ifdef RGBLIGHT_ENABLE
     #define RGBLIGHT_EFFECT_BREATHING
     #define RGBLIGHT_EFFECT_RAINBOW_MOOD

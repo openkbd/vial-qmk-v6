@@ -49,16 +49,13 @@ static void oled_render_layer_state(void) {
             oled_write_ln_P(PSTR("Default"), false);
             break;
         case 1:
-            oled_write_ln_P(PSTR("Num+Sym"), false);
+            oled_write_ln_P(PSTR("Lower"), false);
             break;
         case 2:
             oled_write_ln_P(PSTR("Raise"), false);
             break;
-        case 3:
-            oled_write_ln_P(PSTR("Adjust"), false);
-            break;
         default:
-            oled_write_ln_P(PSTR("Mouse"), false);
+            oled_write_ln_P(PSTR("Undef"), false);
             break;
     }
 }
