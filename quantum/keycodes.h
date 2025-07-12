@@ -25,6 +25,7 @@
 
 #pragma once
 // clang-format off
+#include "keycode_legacy.h"
 
 enum qk_keycode_ranges {
 // Ranges

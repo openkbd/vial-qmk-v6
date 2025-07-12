@@ -84,9 +84,12 @@ void eeconfig_update_rgb_matrix(void);
 // EEPROM is invalid and use/save defaults.
 bool via_eeprom_is_valid(void) {
 #ifdef VIAL_ENABLE
-    uint8_t magic0 = BUILD_ID & 0xFF;
-    uint8_t magic1 = (BUILD_ID >> 8) & 0xFF;
-    uint8_t magic2 = (BUILD_ID >> 16) & 0xFF;
+    uint8_t magic0 = PRODUCT_ID  & 0xFF;
+    uint8_t magic1 = (PRODUCT_ID >> 8) & 0xFF;
+    uint8_t magic2 = DEVICE_VER & 0xFF;  //Ver format: A.B.C. use 0xBC
+    //uint8_t magic0 = BUILD_ID & 0xFF;
+    //uint8_t magic1 = (BUILD_ID >> 8) & 0xFF;
+    //uint8_t magic2 = (BUILD_ID >> 16) & 0xFF;
 #else
     char *  p      = QMK_BUILDDATE; // e.g. "2019-11-05-11:29:54"
     uint8_t magic0 = ((p[2] & 0x0F) << 4) | (p[3] & 0x0F);
@@ -101,9 +104,12 @@ bool via_eeprom_is_valid(void) {
 // Keyboard level code (eg. via_init_kb()) should not call this
 void via_eeprom_set_valid(bool valid) {
 #ifdef VIAL_ENABLE
-    uint8_t magic0 = BUILD_ID & 0xFF;
-    uint8_t magic1 = (BUILD_ID >> 8) & 0xFF;
-    uint8_t magic2 = (BUILD_ID >> 16) & 0xFF;
+    uint8_t magic0 = PRODUCT_ID  & 0xFF;
+    uint8_t magic1 = (PRODUCT_ID >> 8) & 0xFF;
+    uint8_t magic2 = DEVICE_VER & 0xFF;  //Ver format: A.B.C. use 0xBC
+    //uint8_t magic0 = BUILD_ID & 0xFF;
+    //uint8_t magic1 = (BUILD_ID >> 8) & 0xFF;
+    //uint8_t magic2 = (BUILD_ID >> 16) & 0xFF;
 #else
     char *  p      = QMK_BUILDDATE; // e.g. "2019-11-05-11:29:54"
     uint8_t magic0 = ((p[2] & 0x0F) << 4) | (p[3] & 0x0F);
@@ -166,6 +172,7 @@ uint32_t via_get_layout_options(void) {
 }
 
 __attribute__((weak)) void via_set_layout_options_kb(uint32_t value) {}
+__attribute__((weak)) void via_set_layout_options_after(void) {}
 
 void via_set_layout_options(uint32_t value) {
     via_set_layout_options_kb(value);
@@ -176,6 +183,7 @@ void via_set_layout_options(uint32_t value) {
         value = value >> 8;
         target--;
     }
+    via_set_layout_options_after();
 }
 
 // Called by QMK core to process VIA-specific keycodes.

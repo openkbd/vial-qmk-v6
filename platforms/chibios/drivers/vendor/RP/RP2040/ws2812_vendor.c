@@ -290,7 +290,7 @@ void ws2812_flush(void) {
 #if defined(WS2812_RGBW)
         WS2812_BUFFER[i] = rgbw8888_to_u32(ws2812_leds[i].r, ws2812_leds[i].g, ws2812_leds[i].b, ws2812_leds[i].w);
 #else
-        WS2812_BUFFER[i] = rgbw8888_to_u32(ws2812_leds[i].r, ws2812_leds[i].g, ws2812_leds[i].b, 0);
+        WS2812_BUFFER[i] = rgbw8888_to_u32(ws2812_leds[i].g, ws2812_leds[i].r, ws2812_leds[i].b, 0);
 #endif
     }
 
@@ -299,3 +299,22 @@ void ws2812_flush(void) {
     dmaChannelSetModeX(dma_channel, RP_DMA_MODE_WS2812);
     dmaChannelEnableX(dma_channel);
 }
+
+//Backwards compatibility
+void ws2812_setleds(ws2812_led_t* ledarray, uint16_t leds) {
+    sync_ws2812_transfer();
+
+    for (int i = 0; i < leds; i++) {
+#if defined(WS2812_RGBW)
+        WS2812_BUFFER[i] = rgbw8888_to_u32(ledarray[i].r, ledarray[i].g, ledarray[i].b, ledarray[i].w);
+#else
+        WS2812_BUFFER[i] = rgbw8888_to_u32(ledarray[i].g, ledarray[i].r, ledarray[i].b, 0);
+#endif
+    }
+
+    dmaChannelSetSourceX(dma_channel, (uint32_t)WS2812_BUFFER);
+    dmaChannelSetCounterX(dma_channel, leds);
+    dmaChannelSetModeX(dma_channel, RP_DMA_MODE_WS2812);
+    dmaChannelEnableX(dma_channel);
+}
+

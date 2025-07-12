@@ -299,8 +299,8 @@ typedef struct animation_state_t {
     deferred_token         defer_token;
 } animation_state_t;
 
-static deferred_executor_t animation_executors[QUANTUM_PAINTER_CONCURRENT_ANIMATIONS] = {0};
-static animation_state_t   animation_states[QUANTUM_PAINTER_CONCURRENT_ANIMATIONS]    = {0};
+deferred_executor_t animation_executors[QUANTUM_PAINTER_CONCURRENT_ANIMATIONS] = {0};
+animation_state_t   animation_states[QUANTUM_PAINTER_CONCURRENT_ANIMATIONS]    = {0};
 
 static deferred_token qp_render_animation_state(animation_state_t *state, uint16_t *delay_ms) {
     qgf_frame_info_t frame_info = {0};

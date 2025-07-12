@@ -698,6 +698,32 @@ if (QS_oneshot_tap_toggle > 1) {
                     break;
                 default:
 #    ifndef NO_ACTION_TAPPING /* tap key */
+#if (DYNAMIC_KEYMAP_LAYER_COUNT <= 8) && !defined(NO_ACTION_LAYER_LTS) // LT(S) as ydkb 24B
+                    if (event.pressed) {
+                        if (tap_count >0 && !((action.layer_tap.val & 0x8) && record->tap.interrupted))  {
+                            dprint("KEYMAP_TAP_KEY: Tap: register_code\n");
+                            register_code(action.layer_tap.code);
+                            // Delay for MacOS CapsLock
+                            if (action.layer_tap.code == KC_CAPSLOCK) {
+                                wait_ms(100);
+                            }
+                        } else {
+                            dprint("KEYMAP_TAP_KEY: No tap: On on press\n");
+                            layer_on(action.layer_tap.val & 0x7);
+                        }
+                    } else {
+                      #if 1
+                        if (tap_count >0 && !((action.layer_tap.val & 0x8) && record->tap.interrupted))  {
+                            dprint("KEYMAP_TAP_KEY: Tap: unregister_code\n");
+                            unregister_code(action.layer_tap.code);
+                        } else 
+                      #endif
+                        {
+                            dprint("KEYMAP_TAP_KEY: No tap: Off on release\n");
+                            layer_off(action.layer_tap.val & 0x7);
+                        }
+                    }
+#else
                     if (event.pressed) {
                         if (tap_count > 0) {
                             ac_dprintf("KEYMAP_TAP_KEY: Tap: register_code\n");
@@ -720,6 +746,7 @@ if (QS_oneshot_tap_toggle > 1) {
                             layer_off(action.layer_tap.val);
                         }
                     }
+#endif
 #    else
                     if (event.pressed) {
                         ac_dprintf("KEYMAP_TAP_KEY: Tap: register_code\n");

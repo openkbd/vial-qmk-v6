@@ -1,0 +1,103 @@
+/*
+Copyright 2025 YANG
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+#include "hal.h"
+#include "ch.h"
+#include "quantum.h"
+#include "via.h"
+#include "hardware/watchdog.h"
+#include "hardware/flash.h"
+#include "hardware/sync.h"
+//#include "pico/multicore.h"
+
+#ifndef LED_TYPE
+#define LED_TYPE rgb_led_t
+#endif
+
+extern uint8_t indicator_color_config[];
+extern LED_TYPE indicator_color[];
+
+void rprint(char *msg) {
+    //0xfdee
+    uint8_t eeee_buf[32] = {0};
+    uint8_t msg_len = strlen(msg);
+    if (msg_len > 30) msg_len = 30;
+    memcpy(&eeee_buf[2], msg, msg_len);
+    eeee_buf[0] = 0xFD;
+    eeee_buf[1] = 0xEE;
+    raw_hid_send(eeee_buf, 32);
+}
+
+static void call_flash_range_program(void *param) {
+    uint32_t offset = ((uintptr_t*)param)[0];
+    const uint8_t *data = (const uint8_t *)((uintptr_t*)param)[1];
+    flash_range_program(offset, data, 256);
+}
+
+void raw_hid_receive_kb(uint8_t *data, uint8_t length) {
+    uint8_t *command_id = &(data[0]);
+    static uint8_t page_data[256] = {0};
+    if (*command_id == 0xFD) {
+        if (data[1] == 0xF1) {
+            // 0xF1: write
+            if (data[4] == 0) {
+                //data start
+                memset(page_data, 0, sizeof(page_data));
+            }
+            for (uint8_t i=0; i<27; i++) {
+                uint16_t target = data[4] + i;
+                if (target < 256) {
+                    page_data[target] = data[5+i];
+                } else {
+                    uint32_t offset = (data[2] << 16) | (data[3] << 8);
+                    if (offset < 0x400000) return;
+                    break;
+                }
+            }
+        }
+    }
+}
+
+//after set layout command
+void via_set_layout_options_after(void)
+{
+    user_config_init();
+}
+
+void user_config_init(void)
+{
+    static const uint8_t indicator_hue_preset[8] = {0, 21, 42, 85, 127, 170, 212, 255};
+    #ifdef INDICATOR_VAL
+    static uint8_t val = INDICATOR_VAL;
+    #else 
+    static uint8_t val = 255;
+    #endif
+
+    uint16_t layout_value = via_get_layout_options();
+    for (uint8_t i=0; i<3; i++) {
+        indicator_color_config[i] = (layout_value & 0b111);
+        uint8_t hue = indicator_hue_preset[ indicator_color_config[i] ];
+        layout_value >>= 3;
+        if (hue == 255) indicator_color[i] = (LED_TYPE){0, 0, 0};
+        else            indicator_color[i] = hsv_to_rgb((HSV){hue, 255, val});
+        xprintf("\n indicator %d R: %d, G: %d, B:%d", i, indicator_color[i].r, indicator_color[i].g, indicator_color[i].b);
+    }
+    led_wakeup();
+    rprint("Layout set change\n");
+}
+
+
