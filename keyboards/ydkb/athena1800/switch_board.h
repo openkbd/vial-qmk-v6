@@ -41,5 +41,13 @@ static inline void select_key_ready(void) {
         palClearLine(6U); \
     } while(0)
 
+//RCK PB11
+#if 0
+#define KEYS_LATCH() \
+    do { \
+        palSetLine(5U); asm("nop");\
+        palClearLine(5U); \
+    } while(0)
 
+#endif
 #endif

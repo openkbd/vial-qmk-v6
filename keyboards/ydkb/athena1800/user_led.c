@@ -85,6 +85,7 @@ void rgblight_call_driver(LED_TYPE *start_led, uint8_t num_leds) {
     ws2812_setleds(rgbled, PHY_INDICATOR_NUM+RGBLED_NUM);
 }
 
+extern bool bootmagic_checked;
 
 bool led_update_user(led_t usb_led) {
     led_set_user(usb_led);
@@ -102,10 +103,9 @@ void led_set_user(uint8_t usb_led)
     }
 
     if (rgblight_config.mode == 1) rgblight_mode_noeeprom(rgblight_config.mode);
-    rgblight_set(); //set rgb even when rgblight.enable=0
+    if (bootmagic_checked) rgblight_set(); //set rgb even when rgblight.enable=0
 #endif
 }
-extern bool bootmagic_checked;
 void hook_keyboard_loop(void)
 {
     static uint8_t rgb_inited = 0;

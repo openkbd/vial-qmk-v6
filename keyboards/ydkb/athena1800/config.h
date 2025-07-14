@@ -2,7 +2,7 @@
 
 /* USB Device descriptor parameter */
 #undef  PRODUCT
-#define PRODUCT         "Athena 1800 Keybaord (VIAL_DP7C)"
+#define PRODUCT         "Athena 1800 Keybaord (VIAL_DP7E)"
 
 /* key matrix size */
 #define MATRIX_ROWS 14 //max supported
