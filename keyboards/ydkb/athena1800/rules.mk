@@ -13,7 +13,8 @@ QUANTUM_PAINTER_DRIVERS  = gc9107_spi
 
 # Display data
 SRC +=  gfx/robotomono20.qff.c \
-        gfx/boot.qgf.c
+        gfx/boot.qgf.c \
+        gfx/boot2.qgf.c
 
 # 16M FLASH
 # LDFLAGS += -Xlinker --defsym=FLASH_LEN=16384k

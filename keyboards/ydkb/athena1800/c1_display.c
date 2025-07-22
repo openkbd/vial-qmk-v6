@@ -3,6 +3,7 @@
 
 #include "qp_gc9107_opcodes.h"
 #include "gfx/boot.qgf.h"
+#include "gfx/boot2.qgf.h"
 
 #include "gfx/robotomono20.qff.h"
 
@@ -75,7 +76,12 @@ void display_init(void)
     my_font = qp_load_font_mem(font_robotomono20);
 
     // boot gif
+    #ifndef BOOTGIF
     playing_gif = qp_load_image_mem(gfx_boot);
+    #else
+    playing_gif = qp_load_image_mem(BOOTGIF);
+    #endif
+
     kb_idle_timer = 0;
     gif_started = 0;
     
@@ -126,8 +132,8 @@ void update_gif_task(void) {
             if (playing_gif->width == 128 && playing_gif->width == 128) {
                 wait_ms(100);
             } else {
-                qp_drawtext(display, 0, 30, my_font, "Loading");
-                qp_drawtext(display, 0, 60, my_font, "Failed");
+                qp_drawtext(display, 0, 30, my_font, "To be");
+                qp_drawtext(display, 0, 60, my_font, "uploaded.");
             }
         }
         kb_idle_timer = 0;

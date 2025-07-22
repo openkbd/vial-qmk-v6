@@ -9,5 +9,6 @@
 
 #undef  LCD_ROTATION
 #define LCD_ROTATION QP_ROTATION_180
+#define BOOTGIF gfx_boot2
 
 #define WEAR_LEVELING_BACKING_SIZE 65536 //MAX Value

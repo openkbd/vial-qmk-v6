@@ -56,6 +56,7 @@ void set_rgb_user(uint8_t r, uint8_t g,  uint8_t b)
 
 void rgblight_user_init(void)
 {
+#ifdef CONFIG_BOOT_TEST_RGB
     //test all leds
     set_rgb_user(32, 0, 0);
     wait_ms(300);
@@ -64,6 +65,10 @@ void rgblight_user_init(void)
     set_rgb_user(0, 0, 32);
     wait_ms(300);
     set_rgb_user(0, 0, 0);
+#else
+    // all leds off
+    set_rgb_user(0, 0, 0);
+#endif
 }
 
 void rgblight_call_driver(LED_TYPE *start_led, uint8_t num_leds) {
