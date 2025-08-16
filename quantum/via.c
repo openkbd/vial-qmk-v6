@@ -153,6 +153,11 @@ void eeconfig_init_via(void) {
     dynamic_keymap_reset();
     // This resets the macros in EEPROM to nothing.
     dynamic_keymap_macro_reset();
+#ifdef VIA_QMK_RGBLIGHT_ENABLE
+    // also make rgblight default
+    eeconfig_update_rgblight_default();
+#endif
+    eeconfig_update_user(0); //user eeprom, like lcd_off
     // Save the magic number last, in case saving was interrupted
     via_eeprom_set_valid(true);
 }
