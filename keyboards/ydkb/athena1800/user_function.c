@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "pico/bootrom.h" 
 #include "hardware/watchdog.h"
 
+extern uint8_t gif_playing_id;
 
 void reboot(bool bootloader)
 {
@@ -69,11 +70,8 @@ bool command_extra(uint8_t code)
             wait_us(500*1000);
             reboot(pressed_mods & MOD_BIT(KC_LCTRL));
             break;
-        case KC_O:
-            display_power_toggle();
-            return true;
         case KC_G:
-            next_gif_id();
+            gif_playing_id++;
             return true;
 
         default:
@@ -116,10 +114,7 @@ void post_process_record_user(uint16_t keycode, keyrecord_t *record)
         }
     }
     if (keycode == 0x7e04 && record->event.pressed) {
-        command_extra(KC_G); //display gif
-    }
-    if (keycode == 0x7e05 && record->event.pressed) {
-        command_extra(KC_O); //display ON / OFF
+        command_extra(KC_G);
     }
 }
 

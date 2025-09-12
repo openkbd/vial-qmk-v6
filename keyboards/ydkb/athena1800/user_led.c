@@ -35,12 +35,13 @@ extern rgblight_config_t rgblight_config;
 
 static LED_TYPE RGBLIGHT_COLOR_OFF = { .r = 0, .g = 0, .b = 0 };
 uint8_t indicator_state = 0;
-//默认保留3组LED灯设置，这个设置也可能用于其他作用，比如灯条同步CapsLock指示灯。
+//save 3 colors
 uint8_t indicator_color_config[3];
 LED_TYPE indicator_color[3];
 
 
 LED_TYPE rgbled[PHY_INDICATOR_NUM+RGBLED_NUM];
+extern uint8_t gif_playing_id;
 extern uint8_t rgbinfo_display_on;
 
 void set_rgb_user(uint8_t r, uint8_t g,  uint8_t b)
@@ -91,7 +92,6 @@ void rgblight_call_driver(LED_TYPE *start_led, uint8_t num_leds) {
 
 extern bool bootmagic_checked;
 
-//new qmk 是使用下面这一个调用设置了。
 bool led_update_user(led_t usb_led) {
     led_set_user(usb_led);
 }
@@ -106,20 +106,16 @@ void led_set_user(uint8_t usb_led)
             indicator_state |= (1<<i);
         }
     }
-    // 固定颜色模式下，更新一次。否则在关闭led时，指示灯颜色未更新。
+
     if (rgblight_config.mode == 1) rgblight_mode_noeeprom(rgblight_config.mode);
-    // 250714 如果不加 if (bootmagic_checked), 在新键盘(或者旧键盘清空Flash或还原eeprom后)，会卡启动。
     if (bootmagic_checked) rgblight_set(); //set rgb even when rgblight.enable=0
 #endif
 }
 void hook_keyboard_loop(void)
 {
-    //在bootmagic执行完后，再初始化RGB。否则1是不符合逻辑，2是会卡启动导致键盘死机不可用。
     static uint8_t rgb_inited = 0;
     if (rgb_inited == 0 && bootmagic_checked) { 
-        //读取指示灯颜色设置
-        user_eeconfig_init();
-        //运行一次以熄灭掉所有RGB灯。
+        user_config_init();
         rgblight_user_init();
         rgb_inited = 1;
     }
