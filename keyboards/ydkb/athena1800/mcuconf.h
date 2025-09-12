@@ -11,5 +11,5 @@
 #undef  RP_PWM_USE_PWM3
 #define RP_PWM_USE_PWM3 TRUE
 
-//#undef  RP_CORE1_START
-#define RP_CORE1_START FALSE
+#undef  RP_CORE1_START
+#define RP_CORE1_START TRUE

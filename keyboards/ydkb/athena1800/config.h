@@ -1,8 +1,15 @@
 #pragma once
+// override backing_store_lock/unlock to control core1
+#pragma weak backing_store_lock
+#pragma weak backing_store_unlock
 
 /* USB Device descriptor parameter */
 #undef  PRODUCT
-#define PRODUCT         "Athena 1800 Keybaord (VIAL_DP7M)"
+#define PRODUCT         "Athena 1800 Keybaord (VIAL_DP8M)"
+
+#define EECONFIG_KB_DATA_SIZE 4
+#define VIA_EEPROM_LAYOUT_OPTIONS_DEFAULT 98
+#define RGBLIGHT_DEFAULT_MODE 8
 
 /* key matrix size */
 #define MATRIX_ROWS 14 //max supported
@@ -33,7 +40,9 @@
 //#define LCD_INVERT_COLOR
 #define LCD_WIDTH 128
 #define LCD_HEIGHT 128
-#define QUANTUM_PAINTER_TASK_THROTTLE 63
+#define QUANTUM_PAINTER_TASK_THROTTLE 1
+#define QUANTUM_PAINTER_SUPPORTS_NATIVE_COLORS TRUE
+#define QUANTUM_PAINTER_SUPPORTS_256_PALETTE TRUE
 #define SPI_MODE 0
 #define GC_9107
 
