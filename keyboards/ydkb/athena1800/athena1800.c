@@ -1,5 +1,6 @@
 #include "qp.h"
 #include "qp_comms.h"
+#include "c1.h"
 
 int main(void) {
     platform_setup();
@@ -10,9 +11,6 @@ int main(void) {
     keyboard_init();
     protocol_post_init();
 
-#if (RP_CORE1_START != TRUE)
-    display_init();
-#endif
     /* Main loop */
     while (true) {
         protocol_pre_task();
@@ -34,7 +32,6 @@ int main(void) {
         // Run Quantum Painter task
         void qp_internal_task(void);
         qp_internal_task();
-        display_task_user();
 #endif
 #endif
 
@@ -48,20 +45,24 @@ int main(void) {
     }
 }
 
-
-
 void suspend_power_down_user(void)
 {
     // code will run multiple times while keyboard is suspended
-    // qp_stop_animation(my_anim);
-    // LCD Power OFF， Backlight OFF
-    palSetLine(17U);
+    suspend_power_down_user_display();
 }
 
 void suspend_wakeup_init_user(void)
 {
     // code will run on keyboard wakeup
-    // Enable Power
-    palClearLine(17U);
-    // start_gif();
+    suspend_wakeup_init_user_display();
+}
+
+bool backing_store_lock(void) {
+    c1_after_flash_operation();
+    return true;
+}
+
+bool backing_store_unlock(void) {
+    c1_before_flash_operation();
+    return true;
 }

@@ -32,6 +32,7 @@ extern uint8_t indicator_color_config[];
 extern LED_TYPE indicator_color[];
 
 void rprint(char *msg) {
+    return;
     //0xfdee
     uint8_t eeee_buf[32] = {0};
     uint8_t msg_len = strlen(msg);
@@ -41,6 +42,18 @@ void rprint(char *msg) {
     eeee_buf[1] = 0xEE;
     raw_hid_send(eeee_buf, 32);
 }
+
+void raw_hid_send_bouncing_key(uint8_t row, uint8_t col) {
+    return;
+    //0xfdbc
+    uint8_t buf[32] = {0};
+    buf[0] = 0xFD;
+    buf[1] = 0xBC;
+    buf[2] = row;
+    buf[3] = col;
+    raw_hid_send(buf, 32);
+}
+
 
 static void call_flash_range_program(void *param) {
     uint32_t offset = ((uintptr_t*)param)[0];
@@ -75,10 +88,24 @@ void raw_hid_receive_kb(uint8_t *data, uint8_t length) {
 //after set layout command
 void via_set_layout_options_after(void)
 {
-    user_config_init();
+    user_eeconfig_init();
 }
 
-void user_config_init(void)
+#define DEBOUNCE_DN(x) (uint8_t)(~(0x80 >> x))
+#define DEBOUNCE_UP(x) (uint8_t)(0x80 >> x)
+extern uint8_t now_debounce_dn_mask;
+extern uint8_t now_debounce_up_mask;
+static debounce_dn_level[3] = {DEBOUNCE_DN(1), DEBOUNCE_DN(3), DEBOUNCE_DN(6)};
+static debounce_up_level[3] = {DEBOUNCE_UP(4), DEBOUNCE_UP(5), DEBOUNCE_UP(7)};
+
+void update_debounce_level(level) {
+    level = level & 0b11;
+    now_debounce_dn_mask = debounce_dn_level[level];
+    now_debounce_up_mask = debounce_up_level[level];
+    xprintf("\n debounce dn: %08b, up:%08b", now_debounce_dn_mask, now_debounce_up_mask);
+}
+
+void user_eeconfig_init(void)
 {
     static const uint8_t indicator_hue_preset[8] = {0, 21, 42, 85, 127, 170, 212, 255};
     #ifdef INDICATOR_VAL
@@ -94,10 +121,10 @@ void user_config_init(void)
         layout_value >>= 3;
         if (hue == 255) indicator_color[i] = (LED_TYPE){0, 0, 0};
         else            indicator_color[i] = hsv_to_rgb((HSV){hue, 255, val});
-        xprintf("\n indicator %d R: %d, G: %d, B:%d", i, indicator_color[i].r, indicator_color[i].g, indicator_color[i].b);
+        if (i < 2) xprintf("\n indicator %d R: %d, G: %d, B:%d", i, indicator_color[i].r, indicator_color[i].g, indicator_color[i].b);
     }
+    update_debounce_level(indicator_color_config[2]);
     led_wakeup();
     rprint("Layout set change\n");
 }
-
 

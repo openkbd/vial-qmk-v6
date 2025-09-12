@@ -41,7 +41,6 @@ LED_TYPE indicator_color[3];
 
 
 LED_TYPE rgbled[PHY_INDICATOR_NUM+RGBLED_NUM];
-extern uint8_t gif_playing_id;
 extern uint8_t rgbinfo_display_on;
 
 void set_rgb_user(uint8_t r, uint8_t g,  uint8_t b)
@@ -115,7 +114,7 @@ void hook_keyboard_loop(void)
 {
     static uint8_t rgb_inited = 0;
     if (rgb_inited == 0 && bootmagic_checked) { 
-        user_config_init();
+        user_eeconfig_init();
         rgblight_user_init();
         rgb_inited = 1;
     }

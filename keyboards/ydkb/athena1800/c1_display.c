@@ -1,5 +1,6 @@
 #include "qp.h"
 #include "qp_comms.h"
+#include "c1.h"
 
 #include "qp_gc9107_opcodes.h"
 #include "gfx/boot.qgf.h"
@@ -14,7 +15,10 @@
 painter_device_t display;
 static deferred_token my_anim;
 static bool gif_started = 0;
-uint8_t gif_playing_id = 1;
+static uint8_t prev_gif_id = 99;
+static uint8_t now_gif_id = 1;
+static bool now_lcd_off = 0;
+
 painter_font_handle_t my_font;
 painter_image_handle_t playing_gif;
 static uint8_t boot_displaying = 1;
@@ -24,6 +28,31 @@ static uint8_t boot_displaying = 1;
 extern rgblight_config_t rgblight_config;
 extern uint16_t kb_idle_timer;
 extern uint8_t indicator_state;
+
+
+user_eeconfig_t user_eeconfig;
+
+void display_power_toggle(void) {
+    user_eeconfig.lcd_off ^= 1;
+    eeconfig_update_user(user_eeconfig.raw);
+    now_lcd_off = user_eeconfig.lcd_off;
+    if (now_lcd_off) {
+        qp_stop_animation(my_anim);
+        prev_gif_id = 99;
+        palSetLine(17U); //power off
+    } else {
+        palClearLine(17U); //power on
+    }
+}
+
+void next_gif_id(void) {
+    now_gif_id++;
+    if (now_gif_id > 5) now_gif_id = 1;
+    user_eeconfig.gif_id = now_gif_id;
+    eeconfig_update_user(user_eeconfig.raw);
+}
+
+//user config end
 
 typedef struct animation_state_t {
     painter_device_t       device;
@@ -57,9 +86,9 @@ void display_init(void)
     // LCD Power
     palSetLineMode(17U, PAL_MODE_OUTPUT_PUSHPULL | PAL_RP_PAD_DRIVE12);
     palSetLine(17U); //power off to reset the lcd
-    wait_ms(300);
+    wait_ms(1000);
     palClearLine(17U); //power on and wait
-    wait_ms(300);
+    wait_ms(200);
 
     // Display Init
     display = qp_gc9107_make_spi_device(LCD_HEIGHT, LCD_WIDTH, LCD_CS_PIN, LCD_DC_PIN, LCD_RST_PIN, LCD_SPI_DIVISOR, SPI_MODE);
@@ -75,6 +104,22 @@ void display_init(void)
     // font
     my_font = qp_load_font_mem(font_robotomono20);
 
+    #if 0
+    // testing
+    if (my_font != NULL) {
+        qp_drawtext(display, 0, 0, my_font, "Hello");
+        qp_drawtext(display, 0, 30, my_font, "From");
+        qp_drawtext(display, 0, 60, my_font, "QMK!");
+        wait_ms(200);
+        qp_drawtext(display, 0, 90, my_font, "Booting");
+        wait_ms(200);
+        qp_drawtext(display, 0, 90, my_font, "Booting.");
+        wait_ms(200);
+        qp_drawtext(display, 0, 90, my_font, "Booting..");
+        wait_ms(200);
+        qp_drawtext(display, 0, 90, my_font, "Booting...");
+    }
+    #endif
     // boot gif
     #ifndef BOOTGIF
     playing_gif = qp_load_image_mem(gfx_boot);
@@ -84,7 +129,11 @@ void display_init(void)
 
     kb_idle_timer = 0;
     gif_started = 0;
-    
+
+}
+bool lcd_is_on(void)
+{
+    return (boot_displaying || (now_lcd_off == 0));
 }
 
 void update_gif_task(void) {
@@ -98,36 +147,46 @@ void update_gif_task(void) {
         if (boot_displaying == 2 && animation_states[0].frame_number == 1) {
             boot_displaying = 0;
             wait_ms(800);   
+
+            //after boot gif, poweroff if lcd is disabled
+            if (user_eeconfig.lcd_off) {
+                palSetLine(17U); //power off to reset the lcd
+            }
+            //完成播放后，初始化部分数据
+            now_gif_id = user_eeconfig.gif_id;
+            now_lcd_off = user_eeconfig.lcd_off;
         }
         return;
+    } else if (now_lcd_off) {
+        return;
     }
-    static uint8_t prev_gif_id = 99; 
+
     static painter_image_handle_t logo_image;
     // 0 for caps; 1 for typing; they are both 1M max. Other 4 gifs are 2M max.
     static const uint32_t gif_addr[6] = { (0x1040<<16), (0x1050<<16), (0x1060<<16), (0x1080<<16), (0x10A0<<16), (0x10C0<<16)};
 
     // capslock
     if (indicator_state & 1) {
-        if (gif_playing_id != 0) {
-            gif_playing_id = 0;
+        if (now_gif_id != 0) {
+            now_gif_id = 0;
             qp_stop_animation(my_anim);
             qp_close_image(playing_gif);
-            playing_gif = qp_load_image_mem(gif_addr[gif_playing_id]);
+            playing_gif = qp_load_image_mem(gif_addr[now_gif_id]);
             gif_started = 0;
         }
     }
 
-    else if (prev_gif_id != gif_playing_id) {
-        if (gif_playing_id == 0) gif_playing_id = prev_gif_id;
-        else if (gif_playing_id > 5) gif_playing_id = 1;
+    else if (prev_gif_id != now_gif_id) {
+        if (now_gif_id == 0) now_gif_id = (prev_gif_id > 10)?1:prev_gif_id;
+        else if (now_gif_id > 5) now_gif_id = 1;
         qp_stop_animation(my_anim);
         qp_close_image(playing_gif);
-        playing_gif = qp_load_image_mem(gif_addr[gif_playing_id]);
+        playing_gif = qp_load_image_mem(gif_addr[now_gif_id]);
 
-        if (gif_playing_id != prev_gif_id) {
+        if (now_gif_id != prev_gif_id) {
             qp_rect(display, 0, 0, LCD_HEIGHT, LCD_WIDTH, 0, 0, 0, 1); //default black
             char gif_num[10] = {};
-            sprintf(gif_num, "GIF %d", gif_playing_id);
+            sprintf(gif_num, "GIF %d", now_gif_id);
             qp_drawtext(display, 0, 0, my_font, gif_num);
             if (playing_gif->width == 128 && playing_gif->width == 128) {
                 wait_ms(100);
@@ -139,18 +198,59 @@ void update_gif_task(void) {
         kb_idle_timer = 0;
         gif_started = 0;
         //save prev
-        prev_gif_id = gif_playing_id;
+        prev_gif_id = now_gif_id;
     }
 }
 
 void display_task_user(void)
 {
+    if (!boot_displaying && user_eeconfig.lcd_off) return;
+    //return;
     update_gif_task();
-    if (kb_idle_timer >= 1 && gif_playing_id == 1) {
+
+    if (!boot_displaying && kb_idle_timer == 0 && now_gif_id == 1) { 
+        static uint8_t prev_frame = 0;
+        if (animation_states[0].frame_number != prev_frame) {
+            animation_states[0].frame_number += 2;
+            if (animation_states[0].frame_number >= animation_states[0].image->frame_count) {
+                animation_states[0].frame_number = 0;
+            }
+            prev_frame = animation_states[0].frame_number;
+        }
+    } else if (gif_started == 0) {
+        qp_stop_animation(my_anim);
+        my_anim = qp_animate(display, 0, 0, playing_gif);
+        gif_started = 1;
+    }
+#if 0
+    if (kb_idle_timer >= 1 && now_gif_id == 1) {
         qp_stop_animation_frame(my_anim);
     } else if (gif_started == 0) {
         qp_stop_animation(my_anim);
         my_anim = qp_animate(display, 0, 0, playing_gif);
         gif_started = 1;
+    }
+#endif
+}
+
+void suspend_power_down_user_display(void)
+{
+    // keep power off
+    // LCD Power OFF， Backlight OFF
+    if (!now_lcd_off) {
+        now_lcd_off = 1;
+        qp_stop_animation(my_anim); 
+        prev_gif_id = 99;
+        palSetLine(17U);
+    }
+}
+
+void suspend_wakeup_init_user_display(void)
+{
+    if (now_lcd_off && !user_eeconfig.lcd_off) {
+        // Enable Power
+        palClearLine(17U);
+        wait_ms(200);
+        now_lcd_off = 0;
     }
 }
