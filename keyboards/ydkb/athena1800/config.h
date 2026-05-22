@@ -5,10 +5,10 @@
 
 /* USB Device descriptor parameter */
 #undef  PRODUCT
-#define PRODUCT         "Athena 1800 Keybaord (VIAL_DP8M)"
+#define PRODUCT         "Athena1800 Keybaord (VIAL_DQ5I)"
 
 #define EECONFIG_KB_DATA_SIZE 4
-#define VIA_EEPROM_LAYOUT_OPTIONS_DEFAULT 98
+#define VIA_EEPROM_LAYOUT_OPTIONS_DEFAULT (1<<6 | 2<<3 | 6)
 #define RGBLIGHT_DEFAULT_MODE 8
 
 /* key matrix size */
@@ -19,6 +19,9 @@
 
 #define RP2040_BOOTLOADER_DOUBLE_TAP_RESET
 #define RP2040_BOOTLOADER_DOUBLE_TAP_RESET_TIMEOUT 500U
+
+#undef  CRT0_EXTRA_CORES_NUMBER
+#define CRT0_EXTRA_CORES_NUMBER 1
 
 /* SPI pins */
 #define SPI_DRIVER SPID1
@@ -54,6 +57,9 @@
 
 // Timeout configuration, default 30000 (30 sek). 0 = No timeout. Beware of image retention.
 #define QUANTUM_PAINTER_DISPLAY_TIMEOUT 0
+
+// Mouse Key
+#define MOUSEKEY_MOVE_DELTA 2
 
 /* key combination for command */
 #define IS_COMMAND() ( \

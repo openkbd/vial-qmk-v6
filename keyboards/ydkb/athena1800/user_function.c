@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 void reboot(bool bootloader)
 {
+    usbStop(&USBD1);
     if (bootloader) {
         reset_usb_boot(0, 0); 
     } else {
@@ -75,7 +76,10 @@ bool command_extra(uint8_t code)
         case KC_G:
             next_gif_id();
             return true;
-
+        case KC_F12:
+            display_is_st7735_toggle();
+            reboot(0);
+            return true;
         default:
             return false;   // yield to default command
     }
@@ -120,6 +124,9 @@ void post_process_record_user(uint16_t keycode, keyrecord_t *record)
     }
     if (keycode == 0x7e05 && record->event.pressed) {
         command_extra(KC_O); //display ON / OFF
+    }
+    if (keycode == 0x7e06 && record->event.pressed) {
+        command_extra(KC_F12); //LCD 1|2
     }
 }
 

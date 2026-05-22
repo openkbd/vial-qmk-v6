@@ -1,5 +1,5 @@
 /*
-Copyright 2022 YANG <drk@live.com>
+Copyright 2022 YANG
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -228,7 +228,7 @@ void bootmagic_scan(void)
         }
     }
 
-    if (keys_down_pos[0] == 0) { 
+    if (keys_down_pos[0] == 1) {  //KC_GRAVE
         if (keys_down_pos[1] == 0xff) {
             // only esc down
             // enter_bootloader();

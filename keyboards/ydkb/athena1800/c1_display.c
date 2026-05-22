@@ -2,6 +2,7 @@
 #include "qp_comms.h"
 #include "c1.h"
 
+#include "qp_gc9xxx_opcodes.h"
 #include "qp_gc9107_opcodes.h"
 #include "gfx/boot.qgf.h"
 #include "gfx/boot2.qgf.h"
@@ -12,6 +13,7 @@
 #include "config.h"
 #include "timer.h"
 
+bool is_st7735 = false;
 painter_device_t display;
 static deferred_token my_anim;
 static bool gif_started = 0;
@@ -31,6 +33,58 @@ extern uint8_t indicator_state;
 
 
 user_eeconfig_t user_eeconfig;
+
+
+void keyboard_pre_init_kb (void) {
+    user_eeconfig.raw = eeconfig_read_user();
+    is_st7735 = user_eeconfig.is_st7735;
+}
+
+bool qp_gc9107_init(painter_device_t device, painter_rotation_t rotation) {
+    // A lot of these "unknown" opcodes are sourced from other OSS projects and are seemingly required for this display to function.
+    // clang-format off
+    const uint8_t gc9107_init_sequence[] = {
+        GC9XXX_SET_INTER_REG_ENABLE1,   5,  0,
+        GC9XXX_SET_INTER_REG_ENABLE2,   5,  0,
+        GC9107_SET_FUNCTION_CTL6, 0, 1, GC9107_ALLOW_SET_COMPLEMENT_RGB | 0x08 | GC9107_ALLOW_SET_FRAMERATE,
+        GC9107_SET_COMPLEMENT_RGB, 0, 1, GC9107_COMPLEMENT_WITH_LSB,
+        0xAB, 0, 1, 0x0E,
+        GC9107_SET_FRAME_RATE, 0, 1, 0x19,
+        GC9XXX_SET_PIXEL_FORMAT, 0, 1, GC9107_PIXEL_FORMAT_16_BPP_IFPF,
+        GC9XXX_CMD_SLEEP_OFF,   120, 0,
+        GC9XXX_CMD_DISPLAY_ON,  20,  0
+    };
+
+    const uint8_t gc9107_init_sequence_st7735_fix[] = {
+        GC9XXX_CMD_INVERT_ON,   20, 0 
+    };
+
+    // Configure the rotation (i.e. the ordering and direction of memory writes in GRAM)
+    const uint8_t madctl[] = {
+        [QP_ROTATION_0]   = GC9XXX_MADCTL_BGR,
+        [QP_ROTATION_90]  = GC9XXX_MADCTL_BGR | GC9XXX_MADCTL_MX | GC9XXX_MADCTL_MV,
+        [QP_ROTATION_180] = GC9XXX_MADCTL_BGR | GC9XXX_MADCTL_MX | GC9XXX_MADCTL_MY,
+        [QP_ROTATION_270] = GC9XXX_MADCTL_BGR | GC9XXX_MADCTL_MV | GC9XXX_MADCTL_MY,
+    };
+
+    qp_comms_bulk_command_sequence(device, gc9107_init_sequence, sizeof(gc9107_init_sequence));
+
+    if (is_st7735) qp_comms_command_databyte(device, GC9XXX_CMD_INVERT_ON, 0); 
+    
+    if (is_st7735) {
+        qp_comms_command_databyte(device, GC9XXX_SET_MEM_ACS_CTL, madctl[QP_ROTATION_0]);
+    } else {
+        qp_comms_command_databyte(device, GC9XXX_SET_MEM_ACS_CTL, madctl[rotation]);
+    }
+
+    return true;
+}
+
+void display_is_st7735_toggle(void) {
+    user_eeconfig.is_st7735 ^= 1;
+    eeconfig_update_user(user_eeconfig.raw);
+    is_st7735 = user_eeconfig.is_st7735;
+}
 
 void display_power_toggle(void) {
     user_eeconfig.lcd_off ^= 1;
@@ -147,7 +201,7 @@ void update_gif_task(void) {
         if (boot_displaying == 2 && animation_states[0].frame_number == 1) {
             boot_displaying = 0;
             wait_ms(800);   
-
+            qp_rect(display, 0, 0, LCD_HEIGHT, LCD_WIDTH, 0, 0, 0, 1); //default black
             //after boot gif, poweroff if lcd is disabled
             if (user_eeconfig.lcd_off) {
                 palSetLine(17U); //power off to reset the lcd
@@ -239,7 +293,7 @@ void suspend_power_down_user_display(void)
     // LCD Power OFF， Backlight OFF
     if (!now_lcd_off) {
         now_lcd_off = 1;
-        qp_stop_animation(my_anim); 
+        if (!boot_displaying) qp_stop_animation(my_anim);
         prev_gif_id = 99;
         palSetLine(17U);
     }
@@ -247,7 +301,7 @@ void suspend_power_down_user_display(void)
 
 void suspend_wakeup_init_user_display(void)
 {
-    if (now_lcd_off && !user_eeconfig.lcd_off) {
+    if (now_lcd_off && (!user_eeconfig.lcd_off || boot_displaying)) {
         // Enable Power
         palClearLine(17U);
         wait_ms(200);

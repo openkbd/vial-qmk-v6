@@ -15,7 +15,8 @@ void suspend_wakeup_init_user_display(void);
 typedef union {
     uint32_t raw;
     struct {
-        bool     lcd_off :1;
-        uint8_t  gif_id  :4;
+        uint8_t  gif_id  :      4;
+        bool     lcd_off :      1;
+        bool     is_st7735 :    1;
     };
 } user_eeconfig_t;

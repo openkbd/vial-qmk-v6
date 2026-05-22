@@ -7,7 +7,8 @@
     {"name": "ST(S)", "title": "SnapTap(SOCD) key S", "shortName": "ST(S)"},
     {"name": "ST(D)", "title": "SnapTap(SOCD) key D", "shortName": "ST(D)"},
     {"name": "GIF M+", "title": "Gif Mode +", "shortName": "GIF M+"},
-    {"name": "LCD On/Off", "title": "LCD On or Off", "shortName": "LCD O/X"}
+    {"name": "LCD On/Off", "title": "LCD On or Off", "shortName": "LCD O/X"},
+    {"name": "LCD 1|2", "title": "LCD Type 1 or Type 2", "shortName": "LCD 1/2"}
   ], 
   "layouts": {
     "labels":[
@@ -15,8 +16,8 @@
         "ISO Enter",
         "Split LShift",
         ["Key Debounce","Fast", "Normal", "Slow"],
-        ["NumLock Color", "Red", "Orange", "Yellow", "Green", "Cyan", "Blue", "Violet", "Disable"],
-        ["CapsLock Color", "Red", "Orange", "Yellow", "Green", "Cyan", "Blue", "Violet", "Disable"]
+        ["NumLock Color", "White", "Red", "Yellow", "Green", "Cyan", "Blue", "Violet", "Disable"],
+        ["CapsLock Color", "White", "Red", "Yellow", "Green", "Cyan", "Blue", "Violet", "Disable"]
     ], 
     "keymap": [
         [{"x":2.5,"c":"#777777"},"0,0",{"x":1,"c":"#cccccc"},"0,5","0,6","2,0","2,2",{"x":0.5,"c":"#aaaaaa"},"2,4","2,5","4,2","4,5",{"x":0.5,"c":"#cccccc"},"6,0","6,3","8,0","8,1",{"x":-0.25,"d":true},"0,0\n\n\n3,0",{"x":-0.5,"d":true},"0,0\n\n\n4,0",{"x":-0.5,"d":true},"0,0\n\n\n5,0",{"x":-0.25,"c":"#aaaaaa"},"10,3","10,6","12,1","12,2"],

@@ -100,6 +100,7 @@ static debounce_up_level[3] = {DEBOUNCE_UP(4), DEBOUNCE_UP(5), DEBOUNCE_UP(7)};
 
 void update_debounce_level(level) {
     level = level & 0b11;
+    if (level > 2) level = 2;
     now_debounce_dn_mask = debounce_dn_level[level];
     now_debounce_up_mask = debounce_up_level[level];
     xprintf("\n debounce dn: %08b, up:%08b", now_debounce_dn_mask, now_debounce_up_mask);
@@ -107,7 +108,7 @@ void update_debounce_level(level) {
 
 void user_eeconfig_init(void)
 {
-    static const uint8_t indicator_hue_preset[8] = {0, 21, 42, 85, 127, 170, 212, 255};
+    static const uint8_t indicator_hue_preset[8] = {254, 0, 42, 85, 127, 170, 212, 255};
     #ifdef INDICATOR_VAL
     static uint8_t val = INDICATOR_VAL;
     #else 
@@ -119,7 +120,8 @@ void user_eeconfig_init(void)
         indicator_color_config[i] = (layout_value & 0b111);
         uint8_t hue = indicator_hue_preset[ indicator_color_config[i] ];
         layout_value >>= 3;
-        if (hue == 255) indicator_color[i] = (LED_TYPE){0, 0, 0};
+        if (hue == 254) indicator_color[i] = (LED_TYPE){val/2, val/2, val/2}; //white color, val/2
+        else if (hue == 255) indicator_color[i] = (LED_TYPE){0, 0, 0}; //disable this indicator
         else            indicator_color[i] = hsv_to_rgb((HSV){hue, 255, val});
         if (i < 2) xprintf("\n indicator %d R: %d, G: %d, B:%d", i, indicator_color[i].r, indicator_color[i].g, indicator_color[i].b);
     }
