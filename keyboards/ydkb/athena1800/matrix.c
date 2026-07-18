@@ -228,7 +228,7 @@ void bootmagic_scan(void)
         }
     }
 
-    if (keys_down_pos[0] == 1) {  //KC_GRAVE
+    if (keys_down_pos[0] == 0 || keys_down_pos[0] == 1) {  //KC_ESC or KC_GRAVE
         if (keys_down_pos[1] == 0xff) {
             // only esc down
             // enter_bootloader();

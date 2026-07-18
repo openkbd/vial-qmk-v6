@@ -5,7 +5,7 @@
 
 /* USB Device descriptor parameter */
 #undef  PRODUCT
-#define PRODUCT         "Athena1800 Keybaord (VIAL_DQ5I)"
+#define PRODUCT         "Athena1800 Keybaord (VIAL_DQ69)"
 
 #define EECONFIG_KB_DATA_SIZE 4
 #define VIA_EEPROM_LAYOUT_OPTIONS_DEFAULT (1<<6 | 2<<3 | 6)
