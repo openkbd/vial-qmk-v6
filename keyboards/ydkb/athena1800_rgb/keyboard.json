@@ -6,7 +6,7 @@
     "processor": "RP2040",
     "url": "",
     "usb": {
-        "device_version": "1.0.0",
+        "device_version": "1.0.1",
         "vid": "0x9D5B",
         "pid": "0x2602"
     },

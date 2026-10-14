@@ -5,7 +5,7 @@
 
 /* USB Device descriptor parameter */
 #undef  PRODUCT
-#define PRODUCT         "Athena1800 RGB Keybaord (VIAL_DQ9O)"
+#define PRODUCT         "Athena1800 RGB Keybaord (VIAL_DQAE)"
 
 #define WAIT_FOR_USB
 
@@ -16,6 +16,7 @@
 /* key matrix size */
 #define MATRIX_ROWS 14 //max supported
 #define MATRIX_COLS 8
+#define VIA_EEPROM_LAYOUT_OPTIONS_SIZE 4
 #define SOFTWARE_ESC_BOOTLOADER
 #define WS2812_CALL_DRIVER_PREV
 
